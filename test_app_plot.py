@@ -30,8 +30,13 @@ class AppPlotTests(unittest.TestCase):
         root.update()
 
         self.assertIsInstance(app.plot_toolbar, NavigationToolbar2Tk)
-        self.assertEqual(len(app.forecast_axis.lines), 3)
+        self.assertEqual(len(app.forecast_axis.lines), 4)
         self.assertEqual(len(app.forecast_dates), 1)
+        app._on_hour_slider("2")
+        self.assertIn("Nov 18 at 4:00 PM", app.hour_summary_var.get())
+        self.assertIn("47.7°F", app.hour_summary_var.get())
+        self.assertIn("Precipitation 0%", app.hour_summary_var.get())
+        self.assertEqual(app.hour_slider_index, 2)
 
         root.destroy()
 

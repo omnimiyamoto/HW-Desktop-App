@@ -162,6 +162,18 @@ class JobsiteWeatherPlanner:
         self.plot_toolbar = NavigationToolbar2Tk(self.plot_canvas, plot_host)
         self.plot_toolbar.update()
 
+        slider_row = ttk.Frame(plot_card, style="Card.TFrame")
+        slider_row.grid(row=1, column=0, sticky="ew", pady=(6, 0))
+        slider_row.columnconfigure(1, weight=1)
+        ttk.Label(slider_row, text="Selected hour", style="Muted.TLabel").grid(row=0, column=0, sticky="w")
+        self.hour_slider = ttk.Scale(slider_row, from_=0, to=0, orient="horizontal", command=self._on_hour_slider)
+        self.hour_slider.grid(row=0, column=1, sticky="ew", padx=(8, 8))
+        self.hour_summary_var = tk.StringVar(value="Load a forecast to inspect an hour.")
+        ttk.Label(slider_row, textvariable=self.hour_summary_var, style="Status.TLabel").grid(
+            row=1, column=0, columnspan=2, sticky="w", pady=(4, 0)
+        )
+        self.hour_slider_index = 0
+
         table_card = ttk.Frame(right, style="Card.TFrame", padding=8)
         table_card.grid(row=2, column=0, sticky="nsew")
         table_card.rowconfigure(0, weight=1)
@@ -336,6 +348,61 @@ class JobsiteWeatherPlanner:
         self.forecast_axis.grid(True, alpha=0.25)
         self.forecast_axis.legend(loc="upper right", fontsize=8, ncols=3)
         self.forecast_figure.autofmt_xdate(rotation=25)
+        self.plot_canvas.draw_idle()
+        maximum = max(0, len(times) - 1)
+        self.hour_slider.configure(from_=0, to=maximum)
+        self.hour_slider_index = 0
+        self.hour_slider.set(0)
+        self._update_selected_hour(0)
+
+    def _on_hour_slider(self, value: str) -> None:
+        try:
+            index = int(round(float(value)))
+        except ValueError:
+            return
+        self.hour_slider_index = index
+        self._update_selected_hour(index)
+
+    def _update_selected_hour(self, index: int) -> None:
+        if not self.forecast:
+            return
+        hourly = self.forecast["hourly"]
+        times = [datetime.fromisoformat(value) for value in hourly["time"]]
+        temperatures = hourly["temperature_2m"]
+        winds = hourly["wind_speed_10m"]
+        gusts = hourly["wind_gusts_10m"]
+        precipitation = hourly["precipitation_probability"]
+        if not times:
+            return
+
+        index = max(0, min(index, len(times) - 1))
+        selected_time = times[index]
+        hour_12 = selected_time.hour % 12 or 12
+        period = "AM" if selected_time.hour < 12 else "PM"
+        selected_hour = (
+            f"{selected_time.strftime('%A, %b %d')} at "
+            f"{hour_12}:{selected_time.minute:02d} {period}"
+        )
+        temperature = temperatures[index]
+        wind = winds[index]
+        gust = gusts[index]
+        pop = precipitation[index]
+        self.hour_summary_var.set(
+            f"{selected_hour}: {temperature:.1f}°F  |  Wind {wind:.1f} mph  "
+            f"|  Gust {gust:.1f} mph  |  Precipitation {pop:.0f}%"
+        )
+
+        for marker in getattr(self, "_selected_hour_markers", []):
+            marker.remove()
+        self._selected_hour_markers = [
+            self.forecast_axis.axvline(
+                selected_time,
+                color="#7a4bc3",
+                linestyle="--",
+                linewidth=1.5,
+                label="_selected_hour",
+            )
+        ]
         self.plot_canvas.draw_idle()
 
     def _build_schedule_rows(self) -> None:
