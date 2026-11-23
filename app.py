@@ -10,6 +10,9 @@ import urllib.request
 from datetime import datetime, timedelta
 from tkinter import filedialog, messagebox, ttk
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
 import weather_calculations as calculations
 
 
@@ -126,7 +129,7 @@ class JobsiteWeatherPlanner:
 
         right = ttk.Frame(main, style="App.TFrame")
         right.grid(row=1, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
+        right.rowconfigure(2, weight=1)
         right.columnconfigure(0, weight=1)
 
         summary_card = ttk.LabelFrame(right, text="Forecast and ratings", padding=10)
@@ -140,8 +143,27 @@ class JobsiteWeatherPlanner:
             style="Muted.TLabel",
         ).grid(row=1, column=0, sticky="w", pady=(4, 0))
 
+        plot_card = ttk.LabelFrame(right, text="Hourly forecast plot", padding=6)
+        plot_card.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        plot_card.columnconfigure(0, weight=1)
+
+        self.forecast_figure = Figure(figsize=(7.2, 2.4), dpi=100, constrained_layout=True)
+        self.forecast_axis = self.forecast_figure.add_subplot(111)
+        self.forecast_axis.set_title("Hourly weather")
+        self.forecast_axis.set_ylabel("Temperature (°F) / Wind (mph)")
+        self.forecast_axis.grid(True, alpha=0.25)
+
+        plot_host = ttk.Frame(plot_card, style="Card.TFrame")
+        plot_host.grid(row=0, column=0, sticky="ew")
+
+        self.plot_canvas = FigureCanvasTkAgg(self.forecast_figure, master=plot_host)
+        self.plot_canvas.draw()
+        self.plot_canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        self.plot_toolbar = NavigationToolbar2Tk(self.plot_canvas, plot_host)
+        self.plot_toolbar.update()
+
         table_card = ttk.Frame(right, style="Card.TFrame", padding=8)
-        table_card.grid(row=1, column=0, sticky="nsew")
+        table_card.grid(row=2, column=0, sticky="nsew")
         table_card.rowconfigure(0, weight=1)
         table_card.columnconfigure(0, weight=1)
 
@@ -163,12 +185,12 @@ class JobsiteWeatherPlanner:
         self.ratings_table.bind("<<TreeviewSelect>>", self._show_rating_detail)
 
         detail_card = ttk.LabelFrame(right, text="Rating detail", padding=10)
-        detail_card.grid(row=2, column=0, sticky="ew", pady=(8, 0))
+        detail_card.grid(row=3, column=0, sticky="ew", pady=(8, 0))
         self.detail_var = tk.StringVar(value="Select a forecast date after entering criteria and work intervals.")
         ttk.Label(detail_card, textvariable=self.detail_var, wraplength=650, justify="left").pack(anchor="w")
 
         button_row = ttk.Frame(right, style="App.TFrame")
-        button_row.grid(row=3, column=0, sticky="ew", pady=(8, 0))
+        button_row.grid(row=4, column=0, sticky="ew", pady=(8, 0))
         ttk.Button(button_row, text="Calculate Ratings", command=self._calculate_ratings).pack(side="left")
         ttk.Button(button_row, text="Export CSV", command=self._export_csv).pack(side="left", padx=(6, 0))
 
@@ -287,12 +309,34 @@ class JobsiteWeatherPlanner:
                 break
         self.forecast_dates = seen
         self._build_schedule_rows()
+        self._draw_forecast_plot()
         if self.latitude is not None and self.longitude is not None:
             coordinate_text = f"{self.latitude:.4f}°, {self.longitude:.4f}° — "
         else:
             coordinate_text = ""
         self.location_status.set(f"{self.location_name} — {coordinate_text}{self.timezone}")
         self.detail_var.set("Forecast loaded. Enter work intervals and project criteria, then calculate ratings.")
+
+    def _draw_forecast_plot(self) -> None:
+        if not self.forecast:
+            return
+        hourly = self.forecast["hourly"]
+        times = [datetime.fromisoformat(value) for value in hourly["time"]]
+        temperatures = hourly["temperature_2m"]
+        winds = hourly["wind_speed_10m"]
+        gusts = hourly["wind_gusts_10m"]
+
+        self.forecast_axis.clear()
+        self.forecast_axis.plot(times, temperatures, color="#2878a5", linewidth=1.8, label="Temperature (°F)")
+        self.forecast_axis.plot(times, winds, color="#e69f00", linewidth=1.4, label="Wind (mph)")
+        self.forecast_axis.plot(times, gusts, color="#c44e52", linewidth=1.4, label="Gust (mph)")
+        self.forecast_axis.set_title("Seven-day hourly forecast")
+        self.forecast_axis.set_ylabel("Temperature (°F) / Wind (mph)")
+        self.forecast_axis.set_xlabel("Local date and hour")
+        self.forecast_axis.grid(True, alpha=0.25)
+        self.forecast_axis.legend(loc="upper right", fontsize=8, ncols=3)
+        self.forecast_figure.autofmt_xdate(rotation=25)
+        self.plot_canvas.draw_idle()
 
     def _build_schedule_rows(self) -> None:
         for _, start_var, end_var in self.schedule_rows:
