@@ -139,9 +139,10 @@ Additional validation sources:
 
 | Case | Source / derivation | Expected | Actual | Result |
 |---|---|---|---|---|
-| Provo recorded forecast | Hand calculation using 14:00–16:00 fixture | Crane Go; Concrete Go; Roofing Go | — | To be filled by agent validation |
-| Crane threshold boundaries | Hand calculation: Caution at 12 mph, No-Go at 15 mph | 11.99 mph Caution; 12 mph Caution; 15 mph No-Go | — | To be filled by agent validation |
-| Temperature/wind conversion property | `°C -> °F -> °C` and `km/h -> mph -> km/h` round trips | Original values restored within 1e-6 | — | To be filled by agent validation |
+| Provo recorded forecast | Hand calculation using 14:00–16:00 fixture | Crane Go; Concrete Go; Roofing Go | Crane Go; Concrete Go; Roofing Go | PASS |
+| Crane threshold boundaries | Hand calculation: Caution begins at 12 mph; No-Go begins at 15 mph | 11.99 mph Go; 12 mph Caution; 14.99 mph Caution; 15 mph No-Go | 11.99 mph Go; 12 mph Caution; 14.99 mph Caution; 15 mph No-Go | PASS |
+| Temperature/wind conversion property | Round-trip formulas from the spec | Original values restored within 1e-6 | 20°C restored within 1e-9; 25 mph round trip within 1e-9 mph | PASS |
+| Concrete and roofing thresholds | Hand/property checks at Caution and No-Go boundaries | Concrete 34.99°F No-Go, 39.99°F Caution, 40°F Go; roofing 29.99% Go, 30% Caution, 59.99% Caution, 60% No-Go | Same values and statuses as expected | PASS |
 
 The app developer will confirm at least one passing validation case interactively in the desktop app before submission.
 

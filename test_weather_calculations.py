@@ -34,6 +34,15 @@ class WeatherCalculationTests(unittest.TestCase):
         self.assertTrue(math.isclose(temperature_round_trip, temperature_c, rel_tol=0, abs_tol=1e-9))
         self.assertTrue(math.isclose(speed_round_trip, speed_mph, rel_tol=0, abs_tol=1e-9))
 
+    def test_concrete_and_roofing_threshold_property(self):
+        self.assertEqual(wc.concrete_rating(34.99, 35.0).status, "No-Go")
+        self.assertEqual(wc.concrete_rating(39.99, 35.0).status, "Caution")
+        self.assertEqual(wc.concrete_rating(40.0, 35.0).status, "Go")
+        self.assertEqual(wc.roofing_rating(29.99).status, "Go")
+        self.assertEqual(wc.roofing_rating(30.0).status, "Caution")
+        self.assertEqual(wc.roofing_rating(59.99).status, "Caution")
+        self.assertEqual(wc.roofing_rating(60.0).status, "No-Go")
+
 
 if __name__ == "__main__":
     unittest.main()
