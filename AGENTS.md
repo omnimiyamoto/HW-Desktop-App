@@ -1,0 +1,6 @@
+- After each user request, add an entry to prompts.md: the request, what changed, and whether it worked.
+- Keep prompt-log entries chronological and concise.
+- Do not build implementation code until the spec is complete and the user approves a build stage.
+- Read prompts.md before a new build stage and keep the log accurate.
+- Use spec.md as the source of truth for inputs, calculations, validation, outputs, and features.
+- For every build stage, rerun the validation cases after code changes.
