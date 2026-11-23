@@ -144,7 +144,9 @@ Additional validation sources:
 | Temperature/wind conversion property | Round-trip formulas from the spec | Original values restored within 1e-6 | 20°C restored within 1e-9; 25 mph round trip within 1e-9 mph | PASS |
 | Concrete and roofing thresholds | Hand/property checks at Caution and No-Go boundaries | Concrete 34.99°F No-Go, 39.99°F Caution, 40°F Go; roofing 29.99% Go, 30% Caution, 59.99% Caution, 60% No-Go | Same values and statuses as expected | PASS |
 
-The app developer will confirm at least one passing validation case interactively in the desktop app before submission.
+The app-level 2026-11-18 fixture was confirmed in the Tkinter calculation path:
+Crane Go, Concrete Go, and Roofing Go. The user should additionally select
+these test-only values in the running app before operational use.
 
 ## Out of scope
 

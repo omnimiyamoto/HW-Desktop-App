@@ -124,7 +124,11 @@ class JobsiteWeatherPlanner:
 
         schedule_card = ttk.LabelFrame(left, text="3. Work intervals", padding=10)
         schedule_card.grid(row=3, column=0, sticky="ew")
-        ttk.Label(schedule_card, text="Each date: start–end in 24-hour HH:MM").grid(row=0, column=0, columnspan=3, sticky="w")
+        ttk.Label(
+            schedule_card,
+            text="Each date: start–end in 24-hour HH:MM",
+            style="Muted.TLabel",
+        ).grid(row=0, column=0, columnspan=3, sticky="w")
         self.schedule_rows: list[tuple[str, tk.StringVar, tk.StringVar]] = []
 
         right = ttk.Frame(main, style="App.TFrame")
